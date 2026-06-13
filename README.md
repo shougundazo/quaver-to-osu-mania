@@ -1,4 +1,5 @@
-# quaver-to-osu-mania
+# qptoosu
+
 Convert Quaver `.qp` mapsets to osu!mania `.osz`.
 
 ## Requirements
@@ -9,6 +10,12 @@ Convert Quaver `.qp` mapsets to osu!mania `.osz`.
 The converter can run without PyYAML for common `.qua` files, but PyYAML is
 recommended.
 
+## Libraries
+
+- Python standard library: `argparse`, `ctypes`, `math`, `os`, `pathlib`, `re`,
+  `sys`, `tempfile`, `zipfile`
+- Optional: `PyYAML`
+
 ## Usage
 
 ```powershell
@@ -16,6 +23,9 @@ python qptoosu.py input.qp -o output.osz
 ```
 
 If `-o` is omitted, the output file name is based on the map title.
+
+You can also drag and drop a `.qp` file onto `qptoosu.py`. Drag and drop uses
+the default conversion settings.
 
 ## Options
 

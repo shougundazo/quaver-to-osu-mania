@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
 import math
+import os
 import re
+import sys
 import tempfile
 import zipfile
 from pathlib import Path
@@ -486,7 +489,27 @@ def find_extracted_asset(workdir: Path, asset_name: str) -> Path:
     raise ConversionError(f"referenced asset not found in package: {asset_name}")
 
 
+def should_pause_at_exit(argv: list[str]) -> bool:
+    if os.name != "nt" or len(argv) != 2 or Path(argv[1]).suffix.lower() != ".qp":
+        return False
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        return False
+
+    try:
+        process_ids = (ctypes.c_ulong * 2)()
+        process_count = ctypes.windll.kernel32.GetConsoleProcessList(process_ids, 2)
+    except AttributeError:
+        return False
+    return process_count <= 1
+
+
+def pause_if_needed(should_pause: bool) -> None:
+    if should_pause:
+        input("Press Enter to close...")
+
+
 def main() -> int:
+    pause_on_exit = should_pause_at_exit(sys.argv)
     parser = argparse.ArgumentParser(
         description="Convert a Quaver .qp package to an osu!mania .osz archive."
     )
@@ -519,9 +542,12 @@ def main() -> int:
             map_options=args.mapoption,
         )
     except (ConversionError, zipfile.BadZipFile, OSError) as exc:
-        parser.exit(status=1, message=f"error: {exc}\n")
+        print(f"error: {exc}", file=sys.stderr)
+        pause_if_needed(pause_on_exit)
+        return 1
 
-    print(output)
+    print(f"Created: {output}")
+    pause_if_needed(pause_on_exit)
     return 0
 
 
